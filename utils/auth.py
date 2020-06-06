@@ -20,7 +20,7 @@ def login_required(permissions=None):
             permissions = permissions if permissions is not None else []
             if not flask_login.current_user.is_authenticated:
                 return login_manager.unauthorized()
-            if not user.is_activated:
+            if not flask_login.current_user.is_activated:
                 return make_response('User is not activated', 401)
             if not (flask_login.current_user.permissions.issubset(set(permissions)) or 'god_mode' in flask_login.current_user.permissions):
                 return make_response('User has not permissions', 403)

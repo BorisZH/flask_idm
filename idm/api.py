@@ -175,3 +175,5 @@ def create_organisation():
     db_session.add(org)
     db_session.commit()
     return jsonify({'id': org_id})
+
+
