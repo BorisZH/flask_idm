@@ -158,7 +158,7 @@ def get_organisations():
         'name': o.name,
         'organisation_type': o.organisation_type.name,
         'organisation_type_id': o.organisation_type_id,
-    } for o in Organisation]
+    } for o in orgs]
     return jsonify(data)
 
 

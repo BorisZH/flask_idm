@@ -72,6 +72,7 @@ def create_db(inp_args):
         first_name='System', 
         last_name='', 
         user_assignment_id=id_,
+        is_activated=True,
     )
     s.add(user)
     
@@ -85,6 +86,7 @@ def create_db(inp_args):
         first_name='admin', 
         last_name='admin', 
         user_assignment_id=id_,
+        is_activated=True,
     )
     s.add(user)
     s.commit()
