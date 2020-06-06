@@ -115,3 +115,63 @@ def activate_user():
             return make_response('Wrong activation key', 400)
     else:
         return make_response('User "{}" not found'.format(login), 404)
+
+
+@app.route('/units', methods=['GET'])
+@login_required('organisation_admin')
+def get_units():
+    from idm.role_model import Unit
+
+    units = db_session.query(Unit).filter(Unit.organisation_id == flask_login.current_user.organisation_id).all()
+    units = [] if units is None else units
+    data = [{
+        'id': u.id,
+        'name': u.name,
+    } for u in units]
+    return jsonify(data)
+
+
+@app.route('/units', methods=['POST'])
+@login_required(['create_unit', 'organisation_admin'])
+def create_unit():
+    from idm.role_model import Unit
+    unit_id = str(uuid4())
+    unit = Unit(
+        id=unit_id, 
+        name=request.json['name'], 
+        organisation_id=request.json['organisation_id'],
+    )
+    db_session.add(unit)
+    db_session.commit()
+    return jsonify({'id': unit_id})
+
+
+@app.route('/organisations', methods=['GET'])
+@login_required('god_mode')
+def get_organisations():
+    from idm.role_model import Organisation
+
+    orgs = db_session.query(Organisation).all()
+    orgs = [] if orgs is None else orgs
+    data = [{
+        'id': o.id,
+        'name': o.name,
+        'organisation_type': o.organisation_type.name,
+        'organisation_type_id': o.organisation_type_id,
+    } for o in Organisation]
+    return jsonify(data)
+
+
+@app.route('/organisations', methods=['POST'])
+@login_required('god_mode')
+def create_organisation():
+    from idm.role_model import Organisation
+    org_id = str(uuid4())
+    org = Organisation(
+        id=org_id, 
+        name=request.json['name'], 
+        organisation_type_id=request.json['organisation_type_id'],
+    )
+    db_session.add(org)
+    db_session.commit()
+    return jsonify({'id': org_id})
