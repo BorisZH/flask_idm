@@ -24,5 +24,5 @@ if __name__ == '__main__':
     except ValueError:
         PORT = options.port
     # check_configuration()
-    app.config.from_pyfile('configs\\config.py')
+    app.config.from_pyfile('../configs/config.py')
     app.run(HOST, PORT)
