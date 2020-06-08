@@ -162,7 +162,7 @@ class User(Base):
 
     @property
     def is_active(self):
-        return True
+        return self.is_activated
 
     @property
     def is_anonymous(self):

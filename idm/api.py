@@ -34,7 +34,16 @@ def get_users_list():
 @app.route('/users/me', methods={'GET'})
 @login_required()
 def user():
-    return jsonify({'login': flask_login.current_user.login, 'permissions': list(flask_login.current_user.permissions)})
+    return jsonify({
+        'id': flask_login.current_user.id
+        'login': flask_login.current_user.login, 
+        'permissions': list(flask_login.current_user.permissions),
+        'organisation_id': flask_login.current_user.organisation_id,
+        'unit_id': flask_login.current_user.unit_id,
+        'first_name': flask_login.current_user.first_name,
+        'last_name': flask_login.current_user.last_name,
+        'email': flask_login.current_user.email,
+        })
 
 
 @app.route('/logout', methods=['GET'])
@@ -139,7 +148,7 @@ def create_unit():
     unit = Unit(
         id=unit_id, 
         name=request.json['name'], 
-        organisation_id=request.json['organisation_id'],
+        organisation_id=flask_login.current_user.organisation_id,
     )
     db_session.add(unit)
     db_session.commit()
@@ -156,7 +165,7 @@ def get_organisations():
     data = [{
         'id': o.id,
         'name': o.name,
-        'organisation_type': o.organisation_type.name,
+        'organisation_type': o.organisation_type.org_type,
         'organisation_type_id': o.organisation_type_id,
     } for o in orgs]
     return jsonify(data)

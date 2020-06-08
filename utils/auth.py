@@ -12,7 +12,7 @@ def make_sha256(inp_str, salt='qsmkcdo'):
 login_manager = LoginManager()
 
 
-def login_required(permissions=None):
+def login_required(permissions=None, ignore_no_active=False):
     def wrapper(func):
         @wraps(func)
         def decorated_view(permissions=permissions, *args, **kwargs):            
@@ -20,7 +20,7 @@ def login_required(permissions=None):
             permissions = permissions if permissions is not None else []
             if not flask_login.current_user.is_authenticated:
                 return login_manager.unauthorized()
-            if not flask_login.current_user.is_activated:
+            if not flask_login.current_user.is_active and not ignore_no_active:
                 return make_response('User is not activated', 401)
             if not (flask_login.current_user.permissions.issubset(set(permissions)) or 'god_mode' in flask_login.current_user.permissions):
                 return make_response('User has not permissions', 403)

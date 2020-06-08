@@ -106,7 +106,8 @@ def create_db(inp_args):
         concentrate=False # Don't try to join the relation lines together
         )
 
-        graph.write_png(inp_args.save_schema + '.png') # write out the file
+        graph.write_png(inp_args.save_schema + '.png')
+
 
 if __name__ == '__main__':
     import argparse
