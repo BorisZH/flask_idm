@@ -42,7 +42,7 @@ def authenticate(req):
     login = req.json.get('login')
     pwd = make_sha256(req.json.get('pwd', ''))
     
-    remember = req.json.get('remeber_me')
+    remember = req.json.get('remeber_me', False)
     
     user = db_session.query(User).filter(User.login == login).first() if login else None
 

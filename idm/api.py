@@ -9,51 +9,76 @@ import json
 
 @app.route('/login', methods={'POST'})
 def login():
-    if authenticate(request):
-        return jsonify({'state': 'success'})
+    from idm.role_model import User
+    user = db_session.query(User).filter(User.login == request.json.get('login')).first()
+    if user is not None:
+        if user.password == make_sha256(request.json.get('pwd')):
+            return jsonify({
+                'id': user.id,
+                'login': user.login, 
+                'permissions': list(user.permissions),
+                'organisation_id': user.organisation_id,
+                'unit_id': user.unit_id,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'is_activated': user.is_activated,
+                })
+        else:
+            return make_response('wrong login or password', 400)
     else:
-        return make_response({'state': 'wrong login or password'}, 400)
-
+        return make_response('User with id "{}" not found'.format( request.json.get('login')), 404)
+    
 
 @app.route('/users', methods={'GET'})
-@login_required()
+# @login_required()
 def get_users_list():
     from idm.role_model import User
+    org_id = request.args.get('organisation_id')
+    term = User.organisation_id==org_id if org_id is not None else True
     data = [
         {
             'user_id': u.id,
             'first_name': u.first_name,
             'last_name': u.last_name,
             'login': u.login,
+            'is_activated': user.is_activated,
         } for u in db_session.query(User).filter(
-            User.organisation_id==flask_login.current_user.organisation_id
+            term
             ).all() if u.login != 'system']
     return jsonify(data)
 
 
-@app.route('/users/me', methods={'GET'})
-@login_required()
+@app.route('/users/<string:user_id>/', methods={'GET'})
+# @login_required()
 def user():
-    return jsonify({
-        'id': flask_login.current_user.id
-        'login': flask_login.current_user.login, 
-        'permissions': list(flask_login.current_user.permissions),
-        'organisation_id': flask_login.current_user.organisation_id,
-        'unit_id': flask_login.current_user.unit_id,
-        'first_name': flask_login.current_user.first_name,
-        'last_name': flask_login.current_user.last_name,
-        'email': flask_login.current_user.email,
-        })
+    from idm.role_model import User
+    user = db_session.query(User).filter(User.id == user_id).first()
+    if user is not None:
+        return jsonify({
+            'id': user.id,
+            'login': user.login, 
+            'permissions': list(user.permissions),
+            'organisation_id': user.organisation_id,
+            'unit_id': user.unit_id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'is_activated': user.is_activated
+            })
+    else:
+        return make_response('User with id "{}" not found'.format(user_id), 404)
+ 
 
 
-@app.route('/logout', methods=['GET'])
-@login_required()
-def logout():
-    flask_login.logout_user()
-    if session.get('was_once_logged_in'):
-        # prevent flashing automatically logged out message
-        del session['was_once_logged_in']
-    return jsonify({})
+# @app.route('/logout', methods=['GET'])
+# @login_required()
+# def logout():
+#     flask_login.logout_user()
+#     if session.get('was_once_logged_in'):
+#         # prevent flashing automatically logged out message
+#         del session['was_once_logged_in']
+#     return jsonify({})
 
 
 @app.route('/users', methods=['POST'])
@@ -127,11 +152,11 @@ def activate_user():
 
 
 @app.route('/units', methods=['GET'])
-@login_required('organisation_admin')
+# @login_required('organisation_admin')
 def get_units():
     from idm.role_model import Unit
 
-    units = db_session.query(Unit).filter(Unit.organisation_id == flask_login.current_user.organisation_id).all()
+    units = db_session.query(Unit).filter(Unit.organisation_id == request.['organisation_id']).all()
     units = [] if units is None else units
     data = [{
         'id': u.id,
@@ -141,14 +166,14 @@ def get_units():
 
 
 @app.route('/units', methods=['POST'])
-@login_required(['create_unit', 'organisation_admin'])
+# @login_required(['create_unit', 'organisation_admin'])
 def create_unit():
     from idm.role_model import Unit
     unit_id = str(uuid4())
     unit = Unit(
         id=unit_id, 
         name=request.json['name'], 
-        organisation_id=flask_login.current_user.organisation_id,
+        organisation_id=request.json['organisation_id'],
     )
     db_session.add(unit)
     db_session.commit()
@@ -156,7 +181,7 @@ def create_unit():
 
 
 @app.route('/organisations', methods=['GET'])
-@login_required('god_mode')
+# @login_required('god_mode')
 def get_organisations():
     from idm.role_model import Organisation
 
@@ -172,7 +197,7 @@ def get_organisations():
 
 
 @app.route('/organisations', methods=['POST'])
-@login_required('god_mode')
+# @login_required('god_mode')
 def create_organisation():
     from idm.role_model import Organisation
     org_id = str(uuid4())
@@ -186,3 +211,14 @@ def create_organisation():
     return jsonify({'id': org_id})
 
 
+@app.route('/organisation_types', methods=['GET'])
+def org_types():
+    from idm.role_model import OrganisationType
+
+    orgs = db_session.query(OrganisationType).all()
+    orgs = [] if orgs is None else orgs
+    data = [{
+        'id': o.id,
+        'org_type': o.org_type,
+    } for o in orgs]
+    return jsonify(data)
