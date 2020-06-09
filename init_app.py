@@ -31,7 +31,7 @@ def init_config():
     
 
 def create_db(inp_args):
-    from idm.role_model import Permission, personal_permission_user_assign, UserAssignment, User, Base, Organisation, OrganisationType
+    from idm.role_model import Permission, personal_permission_user_assign, UserAssignment, User, Base, Organisation, OrganisationType, Unit
 
     engine = create_engine('sqlite:///idm.db')
     session = sessionmaker(bind=engine)
@@ -50,18 +50,19 @@ def create_db(inp_args):
         s.add(db_obj)
     s.commit()
 
-    id_ = str(uuid4())
-    ot = OrganisationType(id=id_, org_type='owner')
+    org_id_ = str(uuid4())
+    ot = OrganisationType(id=org_id_, org_type='owner')
     o = Organisation(id=str(uuid4()), name='BuzzWords', organisation_type_id=id_)
     s.add(ot)
     s.add(o)
 
-    id_ = str(uuid4())
-    ot = OrganisationType(id=id_, org_type='client')
-    o = Organisation(id=str(uuid4()), name='Test Organisation', organisation_type_id=id_)
-    s.add(ot)
-    s.add(o)
-
+    # id_ = str(uuid4())
+    # ot = OrganisationType(id=id_, org_type='client')
+    # o = Organisation(id=str(uuid4()), name='Test Organisation', organisation_type_id=id_)
+    # s.add(ot)
+    # s.add(o)
+    unit_id = str(uuid4())
+    unit = Unit(id=unit_id, organisation_id=org_id_, name='dev')
     id_ = str(uuid4())
     user_asg = UserAssignment(id=id_)
     s.add(user_asg)
@@ -87,6 +88,8 @@ def create_db(inp_args):
         last_name='admin', 
         user_assignment_id=id_,
         is_activated=True,
+        organisation_id=org_id_,
+        unit_id=unit_id,
     )
     s.add(user)
     s.commit()
