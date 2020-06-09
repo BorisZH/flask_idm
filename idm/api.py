@@ -106,7 +106,10 @@ def create_new_user():
    
     resp = send_activation(id_)
     db_session.commit()
-    return resp
+    if resp.status_code == 200
+        return jsonify({'id': id_})
+    else:
+        return resp
 
 
 @app.route('/users/<string:user_id>/send_activation', methods=['GET'])
