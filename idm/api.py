@@ -42,7 +42,7 @@ def get_users_list():
             'first_name': u.first_name,
             'last_name': u.last_name,
             'login': u.login,
-            'is_activated': user.is_activated,
+            'is_activated': u.is_activated,
         } for u in db_session.query(User).filter(
             term
             ).all() if u.login != 'system']
@@ -51,7 +51,7 @@ def get_users_list():
 
 @app.route('/users/<string:user_id>/', methods={'GET'})
 # @login_required()
-def user():
+def user(user_id):
     from idm.role_model import User
     user = db_session.query(User).filter(User.id == user_id).first()
     if user is not None:
@@ -151,12 +151,12 @@ def activate_user():
         return make_response('User "{}" not found'.format(login), 404)
 
 
-@app.route('/units', methods=['GET'])
+@app.route('/organisations/<string:org_id>/units', methods=['GET'])
 # @login_required('organisation_admin')
-def get_units():
+def get_units(org_id):
     from idm.role_model import Unit
 
-    units = db_session.query(Unit).filter(Unit.organisation_id == request.['organisation_id']).all()
+    units = db_session.query(Unit).filter(Unit.organisation_id == org_id).all()
     units = [] if units is None else units
     data = [{
         'id': u.id,
@@ -165,15 +165,15 @@ def get_units():
     return jsonify(data)
 
 
-@app.route('/units', methods=['POST'])
+@app.route('/organisations/<string:org_id>/units', methods=['POST'])
 # @login_required(['create_unit', 'organisation_admin'])
-def create_unit():
+def create_unit(org_id):
     from idm.role_model import Unit
     unit_id = str(uuid4())
     unit = Unit(
         id=unit_id, 
         name=request.json['name'], 
-        organisation_id=request.json['organisation_id'],
+        organisation_id=org_id,
     )
     db_session.add(unit)
     db_session.commit()
