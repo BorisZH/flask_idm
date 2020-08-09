@@ -4,7 +4,7 @@ from utils.auth import authenticate, login_required, make_sha256
 import flask_login
 from uuid import uuid1, uuid4
 import json
-
+from sqlalchemy import and_
 
 
 @app.route('/login', methods={'POST'})
@@ -110,6 +110,61 @@ def create_new_user():
         return jsonify({'id': id_})
     else:
         return resp
+
+
+@app.route('/users/<string:user_id>/permissions', methods=['POST', 'DELETE'])
+def set_roles(user_id):
+    from idm.role_model import User, personal_permission_user_assign
+    user = db_session.query(User).filter(User.id == user_id).first()
+    if user is not None:
+        permissions = request.json['permissions_ids']
+        if isinstance(permissions, str):
+            permissions = [permissions]
+        if request.method == 'POST':
+            for i in set(permissions):
+                db_session.execute(personal_permission_user_assign.insert().values(
+                    {
+                        'user_assignment_id': user.user_assignment_id, 
+                        'permission_id': i,
+                    }
+                ))
+        else:
+            for i in set(permissions):
+                db_session.execute(personal_permission_user_assign.delete().where(
+                    and_(personal_permission_user_assign.c.user_assignment_id == user.user_assignment_id, 
+                    personal_permission_user_assign.c.permission_id == i)
+                    }
+                ))
+        return make_response('ok', 200)
+    else:
+        return make_response('User with id "{}" not found'.format(user_id), 404)
+
+
+@app.route('/users/<string:user_id>/roles', methods=['POST', 'DELETE'])
+def set_roles(user_id):
+    from idm.role_model import User, roles_user_assignment
+    user = db_session.query(User).filter(User.id == user_id).first()
+    if user is not None:
+        roles = request.json['roles_ids']
+        if isinstance(roles, str):
+            roles = [roles]
+        if request.method == 'POST':
+            for i in set(roles):
+                db_session.execute(roles_user_assignment.insert().values(
+                    {
+                        'user_assignment_id': user.user_assignment_id, 
+                        'role_id': i,
+                    }
+                ))
+        else:
+            for i in set(roles):
+                db_session.execute(roles_user_assignment.delete().where(
+                    and_(roles_user_assignment.c.user_assignment_id == user.user_assignment_id, 
+                    roles_user_assignment.c.role_id == i)
+                ))
+        return make_response('ok', 200)
+    else:
+        return make_response('User with id "{}" not found'.format(user_id), 404)
 
 
 @app.route('/users/<string:user_id>/send_activation', methods=['GET'])
