@@ -106,14 +106,14 @@ def create_new_user():
    
     resp = send_activation(id_)
     db_session.commit()
-    if resp.status_code == 200
+    if resp.status_code == 200:
         return jsonify({'id': id_})
     else:
         return resp
 
 
 @app.route('/users/<string:user_id>/permissions', methods=['POST', 'DELETE'])
-def set_roles(user_id):
+def set_permissions(user_id):
     from idm.role_model import User, personal_permission_user_assign
     user = db_session.query(User).filter(User.id == user_id).first()
     if user is not None:
@@ -133,7 +133,6 @@ def set_roles(user_id):
                 db_session.execute(personal_permission_user_assign.delete().where(
                     and_(personal_permission_user_assign.c.user_assignment_id == user.user_assignment_id, 
                     personal_permission_user_assign.c.permission_id == i)
-                    }
                 ))
         return make_response('ok', 200)
     else:
